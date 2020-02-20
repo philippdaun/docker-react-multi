@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t philippdaun/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+  - docker run -e CI=true philippdaun/react-test npm run test
+
+after_success:
+  - docker build -t philippdaun/docker-react-multi-nginx ./nginx
+  - docker build -t philippdaun/docker-react-multi-client ./client
+  - docker build -t philippdaun/docker-react-multi-server ./server
+  - docker build -t philippdaun/docker-react-multi-worker ./worker
+  # Log into docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push philippdaun/docker-react-multi-nginx
+  - docker push philippdaun/docker-react-multi-client
+  - docker push philippdaun/docker-react-multi-server
+  - docker push philippdaun/docker-react-multi-worker
